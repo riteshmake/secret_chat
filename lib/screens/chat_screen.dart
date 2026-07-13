@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/message.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
+import '../services/chat_service.dart';
 
 class ChatScreen extends StatefulWidget {
  final String name;
@@ -39,36 +40,14 @@ void initState() {
 }
 
 Future<void> saveMessages() async {
-  final prefs = await SharedPreferences.getInstance();
-
-  List<String> data = messages.map((msg) {
-    return jsonEncode({
-      "text": msg.text,
-      "isMe": msg.isMe,
-      "time": msg.time.toIso8601String(),
-    });
-  }).toList();
-
-  await prefs.setStringList("chat_${widget.name}", data);
+  await ChatService.saveMessages(widget.name, messages);
 }
 
 Future<void> loadMessages() async {
-  final prefs = await SharedPreferences.getInstance();
+  messages = await ChatService.getMessages(widget.name);
 
-  List<String>? data = prefs.getStringList("chat_${widget.name}");
-
-  if (data != null) {
-    setState(() {
-      messages = data.map((item) {
-        final json = jsonDecode(item);
-
-        return Message(
-          text: json["text"],
-          isMe: json["isMe"],
-          time: DateTime.parse(json["time"]),
-        );
-      }).toList();
-    });
+  if (mounted) {
+    setState(() {});
   }
 }
   void sendMessage() {
